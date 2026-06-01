@@ -1,25 +1,11 @@
 import { loginApi, getApiToken, clearApiToken } from './apiClient';
 
-const AUTH_HASH_KEY = 'teknomuallim_auth_hash';
 const AUTH_FAIL_KEY = 'teknomuallim_auth_fails';
 const AUTH_LOCK_KEY = 'teknomuallim_auth_lock';
-const AUTH_VERSION_KEY = 'teknomuallim_auth_version';
 const SESSION_KEY = 'teknomuallim_admin_session';
 const SESSION_DURATION = 30 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_MS = 30 * 1000;
-
-const AUTH_VERSION = '4';
-const ADMIN_PASSWORD = 'Reco7482@@';
-
-async function sha256(text) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 function setLocalSession() {
   const session = { token: 'local', expires: Date.now() + SESSION_DURATION };
@@ -27,21 +13,8 @@ function setLocalSession() {
   sessionStorage.setItem('teknomuallim_admin_active', 'true');
 }
 
-export async function initAuthHash() {
-  const storedVersion = localStorage.getItem(AUTH_VERSION_KEY);
-  if (storedVersion !== AUTH_VERSION || !localStorage.getItem(AUTH_HASH_KEY)) {
-    const hash = await sha256(ADMIN_PASSWORD);
-    localStorage.setItem(AUTH_HASH_KEY, hash);
-    localStorage.setItem(AUTH_VERSION_KEY, AUTH_VERSION);
-  }
-}
-
-async function verifyPasscodeLocal(passcode) {
-  await initAuthHash();
-  const storedHash = localStorage.getItem(AUTH_HASH_KEY);
-  const inputHash = await sha256(passcode);
-  return inputHash === storedHash;
-}
+/** Eski sürüm uyumluluğu — şifre artık yalnızca Netlify API üzerinden doğrulanır */
+export function initAuthHash() {}
 
 export async function verifyPasscode(passcode) {
   const lockUntil = parseInt(localStorage.getItem(AUTH_LOCK_KEY) || '0', 10);
@@ -58,15 +31,12 @@ export async function verifyPasscode(passcode) {
       setLocalSession();
       return { success: true, via: 'api' };
     }
-  } catch {
-    /* API yoksa yerel doğrulama (sadece geliştirme) */
-  }
-
-  if (await verifyPasscodeLocal(passcode)) {
-    localStorage.removeItem(AUTH_FAIL_KEY);
-    localStorage.removeItem(AUTH_LOCK_KEY);
-    setLocalSession();
-    return { success: true, via: 'local' };
+  } catch (err) {
+    return {
+      success: false,
+      attemptsLeft: MAX_ATTEMPTS - 1,
+      error: err.message || 'API girişi başarısız',
+    };
   }
 
   const fails = parseInt(localStorage.getItem(AUTH_FAIL_KEY) || '0', 10) + 1;
@@ -110,9 +80,6 @@ export async function changePasscode(currentPass, newPass) {
   const result = await verifyPasscode(currentPass);
   if (!result.success) return { success: false, error: 'Mevcut şifre hatalı' };
   if (newPass.length < 8) return { success: false, error: 'Yeni şifre en az 8 karakter olmalı' };
-  const hash = await sha256(newPass);
-  localStorage.setItem(AUTH_HASH_KEY, hash);
-  localStorage.setItem(AUTH_VERSION_KEY, AUTH_VERSION);
   clearSession();
   return {
     success: true,
