@@ -3,52 +3,28 @@
  * GET /api/seed?secret=SEED_SECRET  veya Authorization: Bearer <admin JWT>
  * force=1 ile mevcut verinin üzerine yazar
  */
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { getSiteDoc, saveSiteDoc } from '../lib/db.js';
 import { requireAdmin } from '../lib/auth.js';
 import { json, options } from '../lib/http.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function parseSeedJson(raw) {
-  const data = JSON.parse(raw);
-  if (!data.profile || !data.projects) throw new Error('site-data.json geçersiz');
-  return data;
-}
-
-function loadSeedFromDisk() {
-  const candidates = [
-    join(__dirname, '..', '..', 'public', 'site-data.json'),
-    join(process.cwd(), 'public', 'site-data.json'),
-  ];
-  for (const siteDataPath of candidates) {
-    if (existsSync(siteDataPath)) {
-      return parseSeedJson(readFileSync(siteDataPath, 'utf8'));
-    }
-  }
-  return null;
-}
-
-async function loadSeedFromPublishedSite(event) {
+function siteOrigin(event) {
   const proto = event.headers?.['x-forwarded-proto'] || 'https';
   const host =
     event.headers?.['x-forwarded-host'] ||
     event.headers?.host ||
-    process.env.URL?.replace(/^https?:\/\//, '');
-
-  if (!host) throw new Error('Site adresi bulunamadı');
-
-  const res = await fetch(`${proto}://${host}/site-data.json`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`site-data.json indirilemedi (HTTP ${res.status})`);
-  return parseSeedJson(await res.text());
+    process.env.URL?.replace(/^https?:\/\//, '') ||
+    'teknomuallim.com';
+  return `${proto}://${host}`;
 }
 
 async function loadSeedPayload(event) {
-  const fromDisk = loadSeedFromDisk();
-  if (fromDisk) return fromDisk;
-  return loadSeedFromPublishedSite(event);
+  const origin = siteOrigin(event);
+  const res = await fetch(`${origin}/site-data.json`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`site-data.json indirilemedi (HTTP ${res.status})`);
+
+  const data = await res.json();
+  if (!data.profile || !data.projects) throw new Error('site-data.json geçersiz');
+  return data;
 }
 
 export async function handler(event) {

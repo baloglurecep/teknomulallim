@@ -6,9 +6,6 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-[functions.seed]
-  included_files = ["public/site-data.json"]
-
 [[redirects]]
   from = "/api/content"
   to = "/.netlify/functions/content"
