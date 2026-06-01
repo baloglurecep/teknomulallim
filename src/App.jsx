@@ -112,9 +112,11 @@ function App() {
     try {
       const saved = await saveProjects(updatedProjects);
       setProjects(saved);
+      return saved;
     } catch (err) {
       console.error(err);
       alert(`Kayıt hatası: ${err.message}`);
+      throw err;
     }
   }, []);
 

@@ -55,8 +55,18 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
   useEffect(() => {
     if (!activeSim) return;
     const updated = projects.find((p) => p.id === activeSim.id);
-    if (updated && JSON.stringify(updated) !== JSON.stringify(activeSim)) {
-      setActiveSim(normalizeProject(updated));
+    if (!updated) return;
+
+    const merged = normalizeProject({
+      ...updated,
+      customVideoUrl: activeSim.customVideoUrl || updated.customVideoUrl || '',
+      customImageUrl: activeSim.customImageUrl || updated.customImageUrl || '',
+      images: activeSim.images?.length ? activeSim.images : updated.images,
+      simulatorViewMode: activeSim.simulatorViewMode || updated.simulatorViewMode,
+    });
+
+    if (JSON.stringify(merged) !== JSON.stringify(activeSim)) {
+      setActiveSim(merged);
     }
   }, [projects]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -84,11 +94,11 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
 
   const handleUpdateProject = async (updatedProject) => {
     const normalized = normalizeProject(updatedProject);
-    setActiveSim(normalized);
     if (onSaveProjects) {
       const updatedList = projects.map((p) => (p.id === normalized.id ? normalized : p));
       await onSaveProjects(updatedList);
     }
+    setActiveSim(normalized);
   };
 
   const startEditFeature = (idx, feat) => {
@@ -1562,7 +1572,7 @@ function CyberVideoPlayer({ project, onUpdateProject, isAdminMode }) {
 
     try {
       const url = await persistMediaFile(file, `videos/${project.id}`);
-      onUpdateProject({ ...project, customVideoUrl: url });
+      await onUpdateProject({ ...project, customVideoUrl: url });
       alert('Video buluta yüklendi ve kaydedildi.');
     } catch (err) {
       alert(`Video yükleme hatası: ${err.message}`);
@@ -1797,7 +1807,7 @@ function SchematicViewer({ project, onUpdateProject, isAdminMode }) {
 
     try {
       const url = await persistMediaFile(file, `schemas/${project.id}`);
-      onUpdateProject({ ...project, customImageUrl: url });
+      await onUpdateProject({ ...project, customImageUrl: url });
       alert('Teknik şema buluta yüklendi.');
     } catch (err) {
       alert(`Görsel yükleme hatası: ${err.message}`);
@@ -1976,7 +1986,7 @@ function RoboticGallery({ project, onUpdateProject, isAdminMode }) {
       }
 
       const newImagesList = [...images, ...keys];
-      onUpdateProject({ ...project, images: newImagesList });
+      await onUpdateProject({ ...project, images: newImagesList });
       setActiveIndex(images.length);
       setIsPlaying(true);
       alert(`${files.length} galeri görseli buluta yüklendi.`);
