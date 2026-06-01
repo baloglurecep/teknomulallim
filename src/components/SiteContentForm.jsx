@@ -15,10 +15,15 @@ const inputStyle = {
 
 const labelStyle = { fontSize: '11px', color: 'var(--text-secondary)' };
 
-function Field({ label, children, span = 1 }) {
+function Field({ label, hint, children, span = 1 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: span === 2 ? 'span 2' : undefined }}>
       <label style={labelStyle}>{label}</label>
+      {hint && (
+        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.42)', lineHeight: 1.45, marginTop: '-2px' }}>
+          {hint}
+        </span>
+      )}
       {children}
     </div>
   );
@@ -77,10 +82,16 @@ export default function SiteContentForm({ profileForm, setProfileForm }) {
         <Field label="Üst Rozet Metni" span={2}>
           <input style={inputStyle} value={hero.badge || ''} onChange={(e) => updateSite(setProfileForm, 'hero', 'badge', e.target.value)} />
         </Field>
-        <Field label="Terminal Komut Satırı">
+        <Field
+          label="Hakkımda Kutusu — Sol Üst Satır"
+          hint="Ana sayfadaki cam panelin üstündeki cyan satır. Terminal/komut satırı görünümünde süs metindir; örn. teknomuallim@atolye:~$ hakkimda"
+        >
           <input style={inputStyle} value={hero.panelCommand || ''} onChange={(e) => updateSite(setProfileForm, 'hero', 'panelCommand', e.target.value)} />
         </Field>
-        <Field label="Terminal Etiket">
+        <Field
+          label="Hakkımda Kutusu — Sağ Üst Etiket"
+          hint="Aynı panelin sağ köşesindeki küçük etiket. Örn. [ MANİFESTO ] veya [ HAKKIMDA ]. Paneldeki asıl paragraf Profil sekmesinden gelir."
+        >
           <input style={inputStyle} value={hero.panelTag || ''} onChange={(e) => updateSite(setProfileForm, 'hero', 'panelTag', e.target.value)} />
         </Field>
         <Field label="İstatistik 1 Etiketi (proje sayısı otomatik)">
