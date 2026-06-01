@@ -7,7 +7,7 @@ const categoryColors = {
   'Özel Tasarım': { accent: 'var(--green)', glow: 'rgba(0, 255, 115, 0.15)' },
 };
 
-export default function ProjectCard({ project, index, onOpen, btnLabel = 'SİMÜLATÖRÜ BAŞLAT' }) {
+export default function ProjectCard({ project, index, onOpen, btnLabel = 'SİMÜLATÖRÜ BAŞLAT', btnDetailLabel = 'PROJE DETAYI' }) {
   const { ref, onMove, onLeave } = useTilt(10);
   const colors = categoryColors[project.category] || categoryColors['IoT & Donanım'];
   const btnClass = project.category === 'Otomasyon & Yazılım' ? 'btn-purple'
@@ -49,7 +49,7 @@ export default function ProjectCard({ project, index, onOpen, btnLabel = 'SİMÜ
           className={`btn-futuristic holo-btn ${btnClass}`}
         >
           <span className="holo-btn-icon">▶</span>
-          {btnLabel}
+          {project.simulatorEnabled !== false ? btnLabel : btnDetailLabel}
         </button>
       </div>
     </article>

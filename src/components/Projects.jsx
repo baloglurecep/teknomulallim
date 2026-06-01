@@ -62,7 +62,9 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
       customVideoUrl: activeSim.customVideoUrl || updated.customVideoUrl || '',
       customImageUrl: activeSim.customImageUrl || updated.customImageUrl || '',
       images: activeSim.images?.length ? activeSim.images : updated.images,
+      features: activeSim.features?.length ? activeSim.features : updated.features,
       simulatorViewMode: activeSim.simulatorViewMode || updated.simulatorViewMode,
+      simulatorEnabled: activeSim.simulatorEnabled ?? updated.simulatorEnabled,
     });
 
     if (JSON.stringify(merged) !== JSON.stringify(activeSim)) {
@@ -197,6 +199,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
               index={index}
               onOpen={handleOpenSim}
               btnLabel={projSite.btnSimulate}
+              btnDetailLabel={projSite.btnDetail || 'PROJE DETAYI'}
             />
           ))}
         </div>
@@ -209,6 +212,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
               index={index}
               onOpen={handleOpenSim}
               btnLabel={projSite.btnSimulate}
+              btnDetailLabel={projSite.btnDetail || 'PROJE DETAYI'}
             />
           ))}
         </div>
@@ -342,6 +346,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
                               🛰️ [ MODÜL GÖRÜNÜM AYARI ]
                             </span>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                              {activeSim.simulatorEnabled !== false && (
                               <button
                                 onClick={() => handleUpdateProject({ ...activeSim, simulatorViewMode: 'interactive' })}
                                 className="btn-futuristic"
@@ -354,6 +359,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
                               >
                                 ⚡ İNTERAKTİF SİMÜLATÖR
                               </button>
+                              )}
                               <button
                                 onClick={() => handleUpdateProject({ ...activeSim, simulatorViewMode: 'video' })}
                                 className="btn-futuristic"
@@ -401,6 +407,28 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
                             <CyberVideoPlayer project={activeSim} onUpdateProject={handleUpdateProject} isAdminMode={isAdminMode} />
                           ) : viewMode === 'image' ? (
                             <SchematicViewer project={activeSim} onUpdateProject={handleUpdateProject} isAdminMode={isAdminMode} />
+                          ) : activeSim.simulatorEnabled === false ? (
+                            <div
+                              className="glass-panel"
+                              style={{
+                                background: 'rgba(6, 8, 20, 0.6)',
+                                border: '1px dashed rgba(255,255,255,0.12)',
+                                borderRadius: '12px',
+                                padding: '32px 24px',
+                                minHeight: '180px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                textAlign: 'center',
+                                color: 'var(--text-secondary)',
+                                fontFamily: 'var(--font-mono)',
+                                fontSize: '12px',
+                                lineHeight: 1.7,
+                              }}
+                            >
+                              Bu proje için interaktif simülatör kapalı.
+                              {isAdminMode && ' Yönetici panelinden "Simülatörü Göster" seçeneğini açabilirsiniz.'}
+                            </div>
                           ) : (
                             <div
                               className="glass-panel"
@@ -425,7 +453,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
                     );
                   })()}
 
-                  {activeSim.features && activeSim.featuresEnabled !== false && (
+                  {activeSim.featuresEnabled !== false && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <h5 style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)', letterSpacing: '1px', margin: 0 }}>
@@ -442,7 +470,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
                       )}
                     </div>
 
-                    {activeSim.features.map((feat, idx) => {
+                    {(activeSim.features || []).map((feat, idx) => {
                       const isVisible = idx < visibleFeaturesCount;
                       const isEditing = idx === editingFeatureIndex;
 

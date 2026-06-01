@@ -87,10 +87,12 @@ export function normalizeProject(raw) {
   return {
     ...raw,
     simulatorViewMode: validMode,
+    simulatorEnabled: raw.simulatorEnabled !== false,
     customVideoUrl: raw.customVideoUrl || '',
     customImageUrl: raw.customImageUrl || '',
     galleryEnabled: raw.galleryEnabled ?? false,
     featuresEnabled: raw.featuresEnabled !== false,
+    features: Array.isArray(raw.features) ? raw.features : [],
   };
 }
 

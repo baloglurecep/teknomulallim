@@ -54,7 +54,8 @@ export const initialData = {
         subtitle: "Geliştirdiğim projelerin çalışma mantığını ve simülasyonunu doğrudan tarayıcınızda deneyimleyin.",
         filterAll: "Hepsi",
         categories: ["IoT & Donanım", "Otomasyon & Yazılım", "Özel Tasarım"],
-        btnSimulate: "SİMÜLATÖRÜ BAŞLAT"
+        btnSimulate: "SİMÜLATÖRÜ BAŞLAT",
+        btnDetail: "PROJE DETAYI",
       },
       about: {
         label: "Hakkımda",

@@ -47,8 +47,10 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
     category: 'IoT & Donanım',
     technology: '',
     simulatorType: 'custom',
+    simulatorEnabled: true,
     galleryEnabled: false,
     featuresEnabled: true,
+    features: [],
     simulatorViewMode: 'interactive',
     customVideoUrl: '',
     customImageUrl: '',
@@ -122,8 +124,10 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
         category: 'IoT & Donanım',
         technology: '',
         simulatorType: 'custom',
+        simulatorEnabled: true,
         galleryEnabled: false,
         featuresEnabled: true,
+        features: [],
         simulatorViewMode: 'interactive',
         customVideoUrl: '',
         customImageUrl: '',
@@ -137,6 +141,8 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
         images: proj.images ? proj.images.join(', ') : '',
         galleryEnabled: proj.galleryEnabled || false,
         featuresEnabled: proj.featuresEnabled !== false,
+        simulatorEnabled: proj.simulatorEnabled !== false,
+        features: proj.features || [],
         simulatorViewMode: proj.simulatorViewMode || 'interactive',
         customVideoUrl: proj.customVideoUrl || '',
         customImageUrl: proj.customImageUrl || ''
@@ -209,7 +215,8 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
     const parsedProject = normalizeProject({
       ...projectForm,
       technology: techArray,
-      images: imagesArray
+      images: imagesArray,
+      features: Array.isArray(projectForm.features) ? projectForm.features : [],
     });
 
     let updatedProjectsList = [];
@@ -587,6 +594,19 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                         <option value="video">🎥 Konsept Tanıtım Videosu</option>
                         <option value="image">📐 Teknik Şema / 3D Render</option>
                       </select>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 0 0 0' }}>
+                      <input
+                        type="checkbox"
+                        id="simulatorEnabled"
+                        checked={projectForm.simulatorEnabled !== false}
+                        onChange={(e) => setProjectForm({ ...projectForm, simulatorEnabled: e.target.checked })}
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--cyan)', cursor: 'pointer' }}
+                      />
+                      <label htmlFor="simulatorEnabled" style={{ fontSize: '12px', color: '#fff', cursor: 'pointer', userSelect: 'none' }}>
+                        ⚡ İnteraktif Simülatörü Göster
+                      </label>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 0 0 0' }}>

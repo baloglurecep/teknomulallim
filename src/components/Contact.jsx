@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useInView } from '../hooks/useInView';
 import { getAllEmails, getActiveSocialLinks } from '../utils/contentStore';
 
@@ -7,7 +7,6 @@ export default function Contact({ profile }) {
   const subjects = contact.subjects || ['Genel İletişim'];
   const defaultSubject = subjects[0] || 'Genel İletişim';
   const emails = getAllEmails(profile);
-  const mailtoList = emails.join(',');
   const socialLinks = getActiveSocialLinks(profile);
 
   const [headerRef, headerVisible] = useInView(0.2);
@@ -26,40 +25,47 @@ export default function Contact({ profile }) {
     setSentLogs(['📡 Mesajınız iletiliyor...']);
 
     const honeyValue = e.target.elements._honey ? e.target.elements._honey.value : '';
+    if (honeyValue) {
+      setSentLogs(['[OK] Mesajınız alındı.']);
+      setIsSending(false);
+      return;
+    }
+
     const submitEmail = profile.formSubmitEmail || emails[0] || '';
     const ccEmail = profile.formSubmitCc || emails[1] || '';
 
-    const formDataBody = new URLSearchParams();
-    formDataBody.append('İsim / Kurum', formData.name);
-    formDataBody.append('E-posta', formData.email);
-    formDataBody.append('Konu', formData.subject);
-    formDataBody.append('Mesaj', formData.message);
-    if (ccEmail) formDataBody.append('_cc', ccEmail);
-    formDataBody.append('_subject', `[${profile.name} İletişim] ${formData.subject}`);
-    formDataBody.append('_honey', honeyValue);
+    if (!submitEmail) {
+      setSentLogs(['[HATA] Form alıcı e-postası tanımlı değil. Yönetici panelinden ayarlayın.']);
+      setIsSending(false);
+      return;
+    }
 
     try {
-      const response = await fetch(`https://formsubmit.co/ajax/${submitEmail}`, {
+      const response = await fetch('/api/contact', {
         method: 'POST',
-        body: formDataBody,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+          to: submitEmail,
+          cc: ccEmail,
+          siteName: profile.name,
+          _honey: honeyValue,
+        }),
       });
+
       const result = await response.json();
 
-      if (response.ok && (result.success === 'true' || result.success === true)) {
-        setSentLogs(['[OK] Mesajınız başarıyla iletildi!']);
+      if (response.ok && result.success) {
+        setSentLogs(['[OK] Mesajınız e-posta kutunuza iletildi. En kısa sürede dönüş yapacağız.']);
         setFormData({ name: '', email: '', subject: defaultSubject, message: '' });
       } else {
-        throw new Error(result.message || 'Sunucu iletimi reddetti.');
+        throw new Error(result.error || 'Gönderim başarısız');
       }
-    } catch {
-      setSentLogs(['[UYARI] Form gönderilemedi, e-posta istemcisi açılıyor...']);
-      const mailtoUrl = `mailto:${mailtoList}?subject=${encodeURIComponent(
-        `[${profile.name} İletişim] ${formData.subject}`
-      )}&body=${encodeURIComponent(
-        `İsim / Kurum: ${formData.name}\nE-posta: ${formData.email}\nKonu: ${formData.subject}\n\nMesaj:\n${formData.message}`
-      )}`;
-      window.location.href = mailtoUrl;
-      setFormData({ name: '', email: '', subject: defaultSubject, message: '' });
+    } catch (err) {
+      setSentLogs([`[HATA] ${err.message || 'Mesaj gönderilemedi. Lütfen tekrar deneyin.'}`]);
     } finally {
       setIsSending(false);
     }
@@ -109,7 +115,7 @@ export default function Contact({ profile }) {
                     <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{contact.emailLabel}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {emails.map((em) => (
-                        <a key={em} href={`mailto:${mailtoList}`} style={{ color: 'var(--cyan)', textDecoration: 'none' }}>
+                        <a key={em} href={`mailto:${em}`} style={{ color: 'var(--cyan)', textDecoration: 'none' }}>
                           {em}
                         </a>
                       ))}
@@ -177,7 +183,7 @@ export default function Contact({ profile }) {
             {sentLogs.length > 0 && (
               <div style={{ marginTop: '20px', background: '#02040b', border: '1px solid rgba(0, 240, 255, 0.15)', borderRadius: '8px', padding: '12px', fontFamily: 'var(--font-mono)', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {sentLogs.map((log, idx) => (
-                  <div key={idx} style={{ color: log.startsWith('[OK]') ? 'var(--green)' : 'var(--text-secondary)' }}>{log}</div>
+                  <div key={idx} style={{ color: log.startsWith('[OK]') ? 'var(--green)' : log.startsWith('[HATA]') ? '#ff6b6b' : 'var(--text-secondary)' }}>{log}</div>
                 ))}
               </div>
             )}
