@@ -31,6 +31,49 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
   // Form states - Profile
   const [profileForm, setProfileForm] = useState(() => normalizeProfile(profile));
   const [saveNotice, setSaveNotice] = useState('');
+  const [activeTab, setActiveTab] = useState('profile');
+  const [projectEditTab, setProjectEditTab] = useState('basic');
+
+  const ADMIN_TABS = [
+    { id: 'profile', label: 'Profil', icon: '👤' },
+    { id: 'content', label: 'Site Metinleri', icon: '📝' },
+    { id: 'projects', label: 'Projeler', icon: '🚀' },
+    { id: 'security', label: 'Güvenlik', icon: '🔐' },
+    { id: 'system', label: 'Sistem', icon: '☁️' },
+  ];
+
+  const PROJECT_EDIT_TABS = [
+    { id: 'basic', label: 'Temel Bilgiler', icon: '📋' },
+    { id: 'simulator', label: 'Simülatör & Medya', icon: '⚡' },
+    { id: 'steps', label: 'Ar-Ge Adımları', icon: '⚙️' },
+  ];
+
+  const adminTabStyle = (isActive) => ({
+    padding: '10px 14px',
+    fontSize: '11px',
+    fontFamily: 'var(--font-mono)',
+    cursor: 'pointer',
+    border: 'none',
+    borderBottom: isActive ? '2px solid var(--purple)' : '2px solid transparent',
+    background: isActive ? 'rgba(188, 60, 242, 0.12)' : 'transparent',
+    color: isActive ? '#fff' : 'var(--text-secondary)',
+    whiteSpace: 'nowrap',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    flexShrink: 0,
+  });
+
+  const projectSubTabStyle = (isActive) => ({
+    padding: '6px 12px',
+    fontSize: '10px',
+    fontFamily: 'var(--font-mono)',
+    cursor: 'pointer',
+    borderRadius: '6px',
+    border: isActive ? '1px solid var(--cyan)' : '1px solid rgba(255,255,255,0.1)',
+    background: isActive ? 'rgba(0, 240, 255, 0.1)' : 'rgba(0,0,0,0.2)',
+    color: isActive ? 'var(--cyan)' : 'var(--text-secondary)',
+  });
 
   // Admin paneli açıkken site güncellenirse formu senkronize et
   useEffect(() => {
@@ -114,6 +157,8 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
   };
 
   const handleAddOrEditProjectClick = (proj) => {
+    setActiveTab('projects');
+    setProjectEditTab('basic');
     if (proj === 'new') {
       setEditingProject('new');
       setProjectForm({
@@ -199,8 +244,43 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
     }
   };
 
+  const projectFeatures = Array.isArray(projectForm.features) ? projectForm.features : [];
+
+  const setProjectFeatures = (next) => {
+    setProjectForm((prev) => ({ ...prev, features: next }));
+  };
+
+  const addFeatureStep = () => {
+    setProjectFeatures([...projectFeatures, { icon: '⚙️', text: 'Yeni Ar-Ge veya uygulama adımı...' }]);
+  };
+
+  const updateFeatureStep = (idx, field, value) => {
+    setProjectFeatures(
+      projectFeatures.map((feat, i) => (i === idx ? { ...feat, [field]: value } : feat))
+    );
+  };
+
+  const deleteFeatureStep = (idx) => {
+    if (!window.confirm('Bu adımı silmek istediğinize emin misiniz?')) return;
+    setProjectFeatures(projectFeatures.filter((_, i) => i !== idx));
+  };
+
+  const moveFeatureStep = (idx, direction) => {
+    const target = idx + direction;
+    if (target < 0 || target >= projectFeatures.length) return;
+    const next = [...projectFeatures];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setProjectFeatures(next);
+  };
+
   const handleProjectSubmit = async (e) => {
     e.preventDefault();
+
+    if (!projectForm.title?.trim() || !projectForm.description?.trim() || !projectForm.longDescription?.trim()) {
+      alert('Lütfen "Temel Bilgiler" sekmesindeki zorunlu alanları doldurun.');
+      setProjectEditTab('basic');
+      return;
+    }
     
     // Parse tags string into array
     const techArray = projectForm.technology
@@ -396,19 +476,42 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
             </button>
           </div>
 
+          {/* Tab Navigation */}
+          <div style={{
+            display: 'flex',
+            gap: '2px',
+            padding: '0 12px',
+            borderBottom: '1px solid rgba(188, 60, 242, 0.15)',
+            background: 'rgba(6, 8, 20, 0.6)',
+            overflowX: 'auto',
+            flexShrink: 0,
+          }}>
+            {ADMIN_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                style={adminTabStyle(activeTab === tab.id)}
+              >
+                <span>{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* Scrollable Panel Area */}
-          <div style={{ padding: '24px', overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            
-            {/* Row 1: Profile information form */}
+          <div style={{ padding: '24px', overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {saveNotice && (
+              <div style={{ padding: '10px 14px', background: 'rgba(0, 255, 136, 0.08)', border: '1px solid rgba(0, 255, 136, 0.3)', borderRadius: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--green)' }}>
+                {saveNotice}
+              </div>
+            )}
+
+            {activeTab === 'profile' && (
             <section>
               <h4 style={{ fontSize: '15px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px', marginBottom: '16px' }}>
-                [ 1. KİŞİSEL BİLGİLER VE BRANŞ ]
+                [ KİŞİSEL BİLGİLER VE BRANŞ ]
               </h4>
-              {saveNotice && (
-                <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'rgba(0, 255, 136, 0.08)', border: '1px solid rgba(0, 255, 136, 0.3)', borderRadius: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--green)' }}>
-                  {saveNotice}
-                </div>
-              )}
               <form onSubmit={handleProfileSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Kullanıcı Adı / Rumuz</label>
@@ -478,11 +581,12 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                 </div>
               </form>
             </section>
+            )}
 
-            {/* Row 1.5: Site-wide text content */}
+            {activeTab === 'content' && (
             <section>
               <h4 style={{ fontSize: '15px', fontFamily: 'var(--font-mono)', color: 'var(--purple)', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px', marginBottom: '16px' }}>
-                [ 1.5 SİTE METİNLERİ — TÜM BÖLÜMLER ]
+                [ SİTE METİNLERİ — TÜM BÖLÜMLER ]
               </h4>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                 Aşağıdaki alanlar menü, hero, projeler, hakkımda ve iletişim bölümlerindeki tüm yazıları yönetir. Kaydettiğinizde site anında güncellenir.
@@ -492,12 +596,13 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                 SİTE METİNLERİNİ KAYDET
               </button>
             </section>
+            )}
 
-            {/* Row 2: Projects List Manager */}
+            {activeTab === 'projects' && (
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px', marginBottom: '16px' }}>
                 <h4 style={{ fontSize: '15px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)' }}>
-                  [ 2. PROJELER VE SİMÜLATÖRLER ]
+                  [ PROJELER VE SİMÜLATÖRLER ]
                 </h4>
                 {!editingProject && (
                   <button 
@@ -517,11 +622,26 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                     {editingProject === 'new' ? "🆕 YENİ PROJE EKLEME FORMU" : `✏️ PROJEYİ DÜZENLE: ${projectForm.title}`}
                   </h5>
 
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {PROJECT_EDIT_TABS.map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setProjectEditTab(tab.id)}
+                        style={projectSubTabStyle(projectEditTab === tab.id)}
+                      >
+                        {tab.icon} {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {projectEditTab === 'basic' && (
+                      <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Proje Başlığı</label>
                       <input 
-                        type="text" required value={projectForm.title}
+                        type="text" value={projectForm.title}
                         onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
                         style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px', borderRadius: '6px', color: '#fff', outline: 'none' }}
                       />
@@ -543,7 +663,7 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', gridColumn: 'span 2' }}>
                       <label style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Kısa Kart Açıklaması (Maks 200 karakter)</label>
                       <input 
-                        type="text" required value={projectForm.description}
+                        type="text" value={projectForm.description}
                         onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
                         style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px', borderRadius: '6px', color: '#fff', outline: 'none' }}
                       />
@@ -552,7 +672,7 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', gridColumn: 'span 2' }}>
                       <label style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Detaylı Teknik Açıklama (Simülatör içi)</label>
                       <textarea 
-                        rows="2" required value={projectForm.longDescription}
+                        rows="2" value={projectForm.longDescription}
                         onChange={(e) => setProjectForm({ ...projectForm, longDescription: e.target.value })}
                         style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px', borderRadius: '6px', color: '#fff', outline: 'none', fontFamily: 'var(--font-sans)' }}
                       />
@@ -566,7 +686,11 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                         style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px', borderRadius: '6px', color: '#fff', outline: 'none', fontFamily: 'var(--font-mono)' }}
                       />
                     </div>
+                      </>
+                    )}
 
+                    {projectEditTab === 'simulator' && (
+                      <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Eşleşen Simülatör Modülü</label>
                       <select 
@@ -619,19 +743,6 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                       />
                       <label htmlFor="galleryEnabled" style={{ fontSize: '12px', color: '#fff', cursor: 'pointer', userSelect: 'none' }}>
                         🖼️ Proje Resim Galerisini Aktifleştir
-                      </label>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 0 0 0' }}>
-                      <input 
-                        type="checkbox" 
-                        id="featuresEnabled"
-                        checked={projectForm.featuresEnabled}
-                        onChange={(e) => setProjectForm({ ...projectForm, featuresEnabled: e.target.checked })}
-                        style={{ width: '16px', height: '16px', accentColor: 'var(--purple)', cursor: 'pointer' }}
-                      />
-                      <label htmlFor="featuresEnabled" style={{ fontSize: '12px', color: '#fff', cursor: 'pointer', userSelect: 'none' }}>
-                        ⚙️ Ar-Ge ve Uygulama Adımlarını Aktifleştir
                       </label>
                     </div>
 
@@ -690,6 +801,109 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                             style={{ display: 'none' }}
                           />
                         </label>
+                      </div>
+                    )}
+                      </>
+                    )}
+
+                    {projectEditTab === 'steps' && (
+                      <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input 
+                        type="checkbox" 
+                        id="featuresEnabled"
+                        checked={projectForm.featuresEnabled}
+                        onChange={(e) => setProjectForm({ ...projectForm, featuresEnabled: e.target.checked })}
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--purple)', cursor: 'pointer' }}
+                      />
+                      <label htmlFor="featuresEnabled" style={{ fontSize: '12px', color: '#fff', cursor: 'pointer', userSelect: 'none' }}>
+                        ⚙️ Ar-Ge ve Uygulama Adımlarını Aktifleştir
+                      </label>
+                    </div>
+
+                    {projectForm.featuresEnabled && (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                          <label style={{ fontSize: '11px', color: 'var(--cyan)', fontFamily: 'var(--font-mono)' }}>
+                            [ ⚙️ AR-GE VE UYGULAMA ADIMLARI ]
+                          </label>
+                          <button
+                            type="button"
+                            onClick={addFeatureStep}
+                            className="btn-futuristic btn-green"
+                            style={{ padding: '4px 10px', fontSize: '10px' }}
+                          >
+                            ➕ YENİ ADIM EKLE
+                          </button>
+                        </div>
+
+                        {projectFeatures.length === 0 ? (
+                          <div style={{
+                            padding: '16px',
+                            borderRadius: '8px',
+                            border: '1px dashed rgba(255,255,255,0.12)',
+                            color: 'var(--text-secondary)',
+                            fontSize: '12px',
+                            textAlign: 'center',
+                          }}>
+                            Henüz adım yok. &quot;Yeni Adım Ekle&quot; ile başlayın.
+                          </div>
+                        ) : (
+                          projectFeatures.map((feat, idx) => (
+                            <div
+                              key={`feat-${idx}`}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                                padding: '12px',
+                                background: 'rgba(255,255,255,0.02)',
+                                border: '1px solid rgba(0, 240, 255, 0.15)',
+                                borderRadius: '8px',
+                                borderLeft: '3px solid var(--cyan)',
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
+                                  ADIM {idx + 1}
+                                </span>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <button type="button" onClick={() => moveFeatureStep(idx, -1)} className="btn-futuristic" style={{ padding: '2px 6px', fontSize: '9px' }} disabled={idx === 0}>↑</button>
+                                  <button type="button" onClick={() => moveFeatureStep(idx, 1)} className="btn-futuristic" style={{ padding: '2px 6px', fontSize: '9px' }} disabled={idx === projectFeatures.length - 1}>↓</button>
+                                  <button type="button" onClick={() => deleteFeatureStep(idx)} className="btn-futuristic" style={{ padding: '2px 8px', fontSize: '9px', borderColor: '#ff4d4d', color: '#ff4d4d' }}>SİL</button>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '72px', flexShrink: 0 }}>
+                                  <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>İkon</label>
+                                  <input
+                                    type="text"
+                                    value={feat.icon || '⚙️'}
+                                    onChange={(e) => updateFeatureStep(idx, 'icon', e.target.value)}
+                                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px', borderRadius: '6px', color: '#fff', outline: 'none', fontSize: '16px', textAlign: 'center' }}
+                                  />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1 }}>
+                                  <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Adım açıklaması</label>
+                                  <textarea
+                                    rows="2"
+                                    value={feat.text || ''}
+                                    onChange={(e) => updateFeatureStep(idx, 'text', e.target.value)}
+                                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px', borderRadius: '6px', color: '#fff', outline: 'none', fontFamily: 'var(--font-sans)', resize: 'vertical', width: '100%' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </>
+                    )}
+
+                    {!projectForm.featuresEnabled && (
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                        Adımları düzenlemek için yukarıdaki kutuyu işaretleyin.
+                      </p>
+                    )}
                       </div>
                     )}
                   </div>
@@ -756,9 +970,10 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                 </div>
               )}
             </section>
+            )}
 
-            {/* Security: Password Change */}
-            <section style={{ marginBottom: '24px' }}>
+            {activeTab === 'security' && (
+            <section style={{ marginBottom: '0' }}>
               <h4 style={{ fontSize: '15px', fontFamily: 'var(--font-mono)', color: 'var(--purple)', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px', marginBottom: '16px' }}>
                 [ GÜVENLİK — ŞİFRE YÖNETİMİ ]
               </h4>
@@ -780,11 +995,12 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                 )}
               </div>
             </section>
+            )}
 
-            {/* Row 3: Live CMS + backup */}
+            {activeTab === 'system' && (
             <section>
               <h4 style={{ fontSize: '15px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px', marginBottom: '16px' }}>
-                [ 3. CANLI CMS — NETLIFY + ATLAS + CLOUDINARY ]
+                [ CANLI CMS — NETLIFY + ATLAS + CLOUDINARY ]
               </h4>
               <div style={{ background: 'rgba(0,0,0,0.3)', padding: '20px', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.15)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.7' }}>
@@ -825,6 +1041,7 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                 </div>
               </div>
             </section>
+            )}
           </div>
 
           {/* Footer */}
