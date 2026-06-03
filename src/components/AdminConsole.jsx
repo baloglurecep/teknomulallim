@@ -4,6 +4,8 @@ import { verifyPasscode, changePasscode, getLockRemaining } from '../utils/auth'
 import { normalizeProfile, normalizeProject, normalizeProjects, downloadPublishFile } from '../utils/contentStore';
 import { getApiToken } from '../utils/apiClient';
 import SiteContentForm from './SiteContentForm';
+import IconPicker from './IconPicker';
+import { DEFAULT_STEP_ICON } from '../utils/stepIcons';
 
 export default function AdminConsole({ profile, projects, onSaveProfile, onSaveProjects, onResetData, onClose, isAdminMode, onAuthorize }) {
   const [authorized, setAuthorized] = useState(isAdminMode || false);
@@ -251,7 +253,7 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
   };
 
   const addFeatureStep = () => {
-    setProjectFeatures([...projectFeatures, { icon: '⚙️', text: 'Yeni Ar-Ge veya uygulama adımı...' }]);
+    setProjectFeatures([...projectFeatures, { icon: DEFAULT_STEP_ICON, text: 'Yeni Ar-Ge veya uygulama adımı...' }]);
   };
 
   const updateFeatureStep = (idx, field, value) => {
@@ -313,6 +315,20 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
       setTimeout(() => setSaveNotice(''), 4000);
     } catch (err) {
       alert(`Kayıt hatası: ${err.message}`);
+    }
+  };
+
+  const moveProject = async (idx, direction) => {
+    const target = idx + direction;
+    if (target < 0 || target >= projects.length) return;
+    const next = [...projects];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    try {
+      await onSaveProjects(next);
+      setSaveNotice('✓ Proje sırası güncellendi');
+      setTimeout(() => setSaveNotice(''), 3000);
+    } catch (err) {
+      alert(`Sıra güncelleme hatası: ${err.message}`);
     }
   };
 
@@ -874,13 +890,12 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                                 </div>
                               </div>
                               <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '72px', flexShrink: 0 }}>
-                                  <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>İkon</label>
-                                  <input
-                                    type="text"
-                                    value={feat.icon || '⚙️'}
-                                    onChange={(e) => updateFeatureStep(idx, 'icon', e.target.value)}
-                                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '8px', borderRadius: '6px', color: '#fff', outline: 'none', fontSize: '16px', textAlign: 'center' }}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0, alignItems: 'center' }}>
+                                  <label style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>İkon (tıkla)</label>
+                                  <IconPicker
+                                    value={feat.icon}
+                                    onChange={(emoji) => updateFeatureStep(idx, 'icon', emoji)}
+                                    size={52}
                                   />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexGrow: 1 }}>
@@ -927,29 +942,59 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                   </div>
                 </form>
               ) : (
-                /* Projects List Table */
+                <>
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 12px' }}>
+                  Sırayı değiştirmek için ↑ ↓ kullanın. Sitedeki proje kartları bu sırayla listelenir.
+                </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {projects.map((proj) => (
+                  {projects.map((proj, idx) => (
                     <div 
                       key={proj.id} 
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '10px',
                         padding: '12px 16px',
                         background: 'rgba(255,255,255,0.02)',
                         border: '1px solid rgba(255,255,255,0.05)',
                         borderRadius: '8px'
                       }}
                     >
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '14px', color: '#fff', fontWeight: 600 }}>{proj.title}</span>
-                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-                          SIM: {proj.simulatorType.toUpperCase()} // KAT: {proj.category}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: '1 1 180px' }}>
+                        <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', flexShrink: 0 }}>
+                          #{idx + 1}
                         </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                          <span style={{ fontSize: '14px', color: '#fff', fontWeight: 600 }}>{proj.title}</span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                            SIM: {proj.simulatorType.toUpperCase()} // KAT: {proj.category}
+                          </span>
+                        </div>
                       </div>
                       
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          onClick={() => moveProject(idx, -1)}
+                          className="btn-futuristic"
+                          style={{ padding: '4px 8px', fontSize: '10px' }}
+                          disabled={idx === 0}
+                          title="Yukarı taşı"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveProject(idx, 1)}
+                          className="btn-futuristic"
+                          style={{ padding: '4px 8px', fontSize: '10px' }}
+                          disabled={idx === projects.length - 1}
+                          title="Aşağı taşı"
+                        >
+                          ↓
+                        </button>
                         <button 
                           onClick={() => handleAddOrEditProjectClick(proj)}
                           className="btn-futuristic" 
@@ -968,6 +1013,7 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                     </div>
                   ))}
                 </div>
+                </>
               )}
             </section>
             )}

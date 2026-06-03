@@ -32,7 +32,7 @@ export default function Navbar({ profile, onOpenAdmin, activeSection, isAdminMod
           onClick={() => scrollTo('hero')}
           onDoubleClick={onOpenAdmin}
         >
-          <TeacherMascot size={56} />
+          <TeacherMascot size={48} className="nav-brand-mascot" />
           <span className="nav-brand-text">{nav.brand || profile.name}</span>
         </div>
 

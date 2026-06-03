@@ -4,6 +4,8 @@ import ProjectCard from './ProjectCard';
 import ScaleSimulator from './simulators/ScaleSimulator';
 import { useInView } from '../hooks/useInView';
 import { normalizeProject } from '../utils/contentStore';
+import IconPicker from './IconPicker';
+import { DEFAULT_STEP_ICON } from '../utils/stepIcons';
 
 function projectViewMode(project) {
   const mode = project?.simulatorViewMode;
@@ -105,7 +107,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
 
   const startEditFeature = (idx, feat) => {
     setEditingFeatureIndex(idx);
-    setFeatureIconInput(feat.icon || '⚙️');
+    setFeatureIconInput(feat.icon || DEFAULT_STEP_ICON);
     setFeatureTextInput(feat.text || '');
   };
 
@@ -116,7 +118,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
     }
     const updatedFeatures = [...(activeSim.features || [])];
     updatedFeatures[idx] = {
-      icon: featureIconInput.trim() || '⚙️',
+      icon: featureIconInput.trim() || DEFAULT_STEP_ICON,
       text: featureTextInput.trim()
     };
     handleUpdateProject({
@@ -144,7 +146,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
   };
 
   const addNewFeature = () => {
-    const newStep = { icon: '⚙️', text: 'Yeni Ar-Ge veya uygulama adımı açıklaması...' };
+    const newStep = { icon: DEFAULT_STEP_ICON, text: 'Yeni Ar-Ge veya uygulama adımı açıklaması...' };
     const updatedFeatures = [...(activeSim.features || []), newStep];
     const newIdx = updatedFeatures.length - 1;
     
@@ -155,7 +157,7 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
     
     // Automatically open in edit mode
     setEditingFeatureIndex(newIdx);
-    setFeatureIconInput('⚙️');
+    setFeatureIconInput(DEFAULT_STEP_ICON);
     setFeatureTextInput('Yeni Ar-Ge veya uygulama adımı açıklaması...');
   };
 
@@ -489,13 +491,12 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
                               borderLeft: '3px solid var(--purple)'
                             }}
                           >
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                              <input 
-                                type="text"
-                                placeholder="İkon (Emoji)"
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                              <IconPicker
                                 value={featureIconInput}
-                                onChange={(e) => setFeatureIconInput(e.target.value)}
-                                style={{ width: '80px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--purple)', padding: '6px', borderRadius: '4px', color: '#fff', fontSize: '13px', outline: 'none', fontFamily: 'var(--font-mono)' }}
+                                onChange={setFeatureIconInput}
+                                size={48}
+                                title="Adım ikonu seç"
                               />
                               <input 
                                 type="text"
@@ -545,7 +546,20 @@ export default function Projects({ profile, projects, onSaveProjects, isAdminMod
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'start', gap: '12px', flexGrow: 1 }}>
-                            <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 4px var(--cyan))' }}>{feat.icon}</span>
+                            {isAdminMode ? (
+                              <IconPicker
+                                value={feat.icon}
+                                onChange={(emoji) => {
+                                  const updatedFeatures = [...(activeSim.features || [])];
+                                  updatedFeatures[idx] = { ...feat, icon: emoji };
+                                  handleUpdateProject({ ...activeSim, features: updatedFeatures });
+                                }}
+                                size={40}
+                                title="İkonu değiştir"
+                              />
+                            ) : (
+                              <span style={{ fontSize: '20px', filter: 'drop-shadow(0 0 4px var(--cyan))' }}>{feat.icon}</span>
+                            )}
                             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
                               {feat.text}
                             </p>
