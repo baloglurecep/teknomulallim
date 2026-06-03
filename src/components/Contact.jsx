@@ -1,9 +1,10 @@
 import { useInView } from '../hooks/useInView';
-import { getAllEmails, getActiveSocialLinks } from '../utils/contentStore';
+import { getAllEmails, getActivePhones, getActiveSocialLinks, getTelHref, getWhatsAppHref } from '../utils/contentStore';
 
 export default function Contact({ profile }) {
   const contact = profile.site?.contact || {};
   const emails = getAllEmails(profile);
+  const phones = getActivePhones(profile);
   const socialLinks = getActiveSocialLinks(profile);
 
   const [headerRef, headerVisible] = useInView(0.2);
@@ -70,8 +71,101 @@ export default function Contact({ profile }) {
               ))}
             </div>
 
+            {phones.length > 0 && (
+              <>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '11px',
+                    color: 'var(--text-secondary)',
+                    marginTop: '28px',
+                    marginBottom: '12px',
+                  }}
+                >
+                  {contact.phoneLabel || 'TELEFON'}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {phones.map((phone, idx) => (
+                    <div
+                      key={phone.id || idx}
+                      style={{
+                        padding: '14px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(0, 240, 255, 0.12)',
+                        background: 'rgba(0, 240, 255, 0.03)',
+                      }}
+                    >
+                      {phone.label && (
+                        <div
+                          style={{
+                            fontSize: '10px',
+                            fontFamily: 'var(--font-mono)',
+                            color: 'var(--purple)',
+                            marginBottom: '6px',
+                            letterSpacing: '1px',
+                          }}
+                        >
+                          {phone.label.toUpperCase()}
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          fontSize: '14px',
+                          color: '#fff',
+                          fontFamily: 'var(--font-mono)',
+                          marginBottom: '10px',
+                          wordBreak: 'break-all',
+                        }}
+                      >
+                        📞 {phone.number}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        <a
+                          href={getTelHref(phone.number)}
+                          className="btn-futuristic"
+                          style={{
+                            flex: '1 1 120px',
+                            padding: '10px 14px',
+                            fontSize: '11px',
+                            textAlign: 'center',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          📞 {contact.btnCall || 'ARA'}
+                        </a>
+                        <a
+                          href={getWhatsAppHref(phone.number)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-futuristic btn-green"
+                          style={{
+                            flex: '1 1 120px',
+                            padding: '10px 14px',
+                            fontSize: '11px',
+                            textAlign: 'center',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          💬 {contact.btnWhatsapp || 'WHATSAPP'}
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {contact.phoneHint && (
+                  <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    {contact.phoneHint}
+                  </p>
+                )}
+              </>
+            )}
+
             <p style={{ marginTop: '20px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-              Doğrudan e-posta göndermek için yukarıdaki adreslerden birine tıklayın.
+              {phones.length > 0
+                ? 'E-posta veya telefon ile doğrudan iletişime geçebilirsiniz.'
+                : 'Doğrudan e-posta göndermek için yukarıdaki adreslerden birine tıklayın.'}
             </p>
           </div>
 

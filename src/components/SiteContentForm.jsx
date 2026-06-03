@@ -179,6 +179,10 @@ export default function SiteContentForm({ profileForm, setProfileForm }) {
         <Field label="Form Başlığı"><input style={inputStyle} value={contact.formTitle || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'formTitle', e.target.value)} /></Field>
         <Field label="Bilgi Metni" span={2}><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={2} value={contact.infoText || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'infoText', e.target.value)} /></Field>
         <Field label="E-posta Etiketi"><input style={inputStyle} value={contact.emailLabel || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'emailLabel', e.target.value)} /></Field>
+        <Field label="Telefon Bölüm Etiketi"><input style={inputStyle} value={contact.phoneLabel || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'phoneLabel', e.target.value)} /></Field>
+        <Field label="Ara Butonu Metni"><input style={inputStyle} value={contact.btnCall || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'btnCall', e.target.value)} /></Field>
+        <Field label="WhatsApp Butonu Metni"><input style={inputStyle} value={contact.btnWhatsapp || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'btnWhatsapp', e.target.value)} /></Field>
+        <Field label="Telefon İpucu Metni" span={2}><input style={inputStyle} value={contact.phoneHint || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'phoneHint', e.target.value)} /></Field>
         <Field label="Sosyal Ağ Başlığı"><input style={inputStyle} value={contact.socialTitle || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'socialTitle', e.target.value)} /></Field>
         <Field label="Form: İsim Etiketi"><input style={inputStyle} value={contact.labelName || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'labelName', e.target.value)} /></Field>
         <Field label="Form: E-posta Etiketi"><input style={inputStyle} value={contact.labelEmail || ''} onChange={(e) => updateSite(setProfileForm, 'contact', 'labelEmail', e.target.value)} /></Field>
@@ -195,6 +199,102 @@ export default function SiteContentForm({ profileForm, setProfileForm }) {
             onChange={(e) => updateSite(setProfileForm, 'contact', 'subjects', e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))}
           />
         </Field>
+      </div>
+
+      <h5 style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)' }}>— TELEFON —</h5>
+      <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 12px' }}>
+        Telefon bölümü varsayılan olarak kapalıdır. Onay verdiğinizde e-postaların altında görünür. Her numara için Ara ve WhatsApp butonları otomatik oluşur.
+      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={!!profileForm.phones?.enabled}
+            onChange={(e) =>
+              setProfileForm({
+                ...profileForm,
+                phones: { ...profileForm.phones, enabled: e.target.checked, items: profileForm.phones?.items || [] },
+              })
+            }
+          />
+          Telefon bölümünü sitede göster
+        </label>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+        {(profileForm.phones?.items || []).map((phone, idx) => (
+          <div
+            key={phone.id || idx}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr 1fr auto',
+              gap: '8px',
+              alignItems: 'center',
+              padding: '10px',
+              background: 'rgba(0,0,0,0.25)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={phone.enabled !== false}
+              title="Bu numarayı göster"
+              onChange={(e) => {
+                const items = [...(profileForm.phones?.items || [])];
+                items[idx] = { ...items[idx], enabled: e.target.checked };
+                setProfileForm({ ...profileForm, phones: { ...profileForm.phones, items } });
+              }}
+            />
+            <input
+              style={inputStyle}
+              placeholder="Etiket (ör. GSM)"
+              value={phone.label || ''}
+              onChange={(e) => {
+                const items = [...(profileForm.phones?.items || [])];
+                items[idx] = { ...items[idx], label: e.target.value };
+                setProfileForm({ ...profileForm, phones: { ...profileForm.phones, items } });
+              }}
+            />
+            <input
+              style={inputStyle}
+              placeholder="+90 5XX XXX XX XX"
+              value={phone.number || ''}
+              onChange={(e) => {
+                const items = [...(profileForm.phones?.items || [])];
+                items[idx] = { ...items[idx], number: e.target.value };
+                setProfileForm({ ...profileForm, phones: { ...profileForm.phones, items } });
+              }}
+            />
+            <button
+              type="button"
+              className="btn-futuristic"
+              style={{ padding: '8px 10px', fontSize: '10px', color: '#ff6b6b', borderColor: 'rgba(255,100,100,0.3)' }}
+              onClick={() => {
+                const items = (profileForm.phones?.items || []).filter((_, i) => i !== idx);
+                setProfileForm({ ...profileForm, phones: { ...profileForm.phones, items } });
+              }}
+            >
+              SİL
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="btn-futuristic btn-green"
+          style={{ padding: '10px', fontSize: '11px' }}
+          onClick={() => {
+            const items = [
+              ...(profileForm.phones?.items || []),
+              { id: `phone-${Date.now()}`, label: 'GSM', number: '+90 ', enabled: true },
+            ];
+            setProfileForm({
+              ...profileForm,
+              phones: { enabled: profileForm.phones?.enabled || false, items },
+            });
+          }}
+        >
+          + TELEFON NUMARASI EKLE
+        </button>
       </div>
 
       <h5 style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--cyan)' }}>— SOSYAL AĞLAR —</h5>

@@ -33,7 +33,51 @@ export function normalizeProfile(raw) {
     skills: Array.isArray(raw.skills) && raw.skills.length ? raw.skills : base.skills,
     site: deepMergeSite(base.site, raw.site),
     social: normalizeSocial(raw, base.social),
+    phones: normalizePhones(raw, base.phones),
   };
+}
+
+function normalizePhones(raw, basePhones) {
+  const base = basePhones || { enabled: false, items: [] };
+  if (raw.phones?.items && Array.isArray(raw.phones.items)) {
+    return {
+      enabled: !!raw.phones.enabled,
+      items: raw.phones.items
+        .filter((p) => p?.number?.trim())
+        .map((p, i) => ({
+          id: p.id || `phone-${i}`,
+          label: (p.label || 'Telefon').trim(),
+          number: p.number.trim(),
+          enabled: p.enabled !== false,
+        })),
+    };
+  }
+  return base ? { ...base, items: [...(base.items || [])] } : { enabled: false, items: [] };
+}
+
+export function getActivePhones(profile) {
+  const phones = profile?.phones || {};
+  if (!phones.enabled) return [];
+  return (phones.items || []).filter((p) => p.enabled && p.number?.trim());
+}
+
+/** Türkiye ve uluslararası numaralar için wa.me / tel URI */
+export function normalizePhoneDigits(number) {
+  let digits = (number || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('0')) digits = `90${digits.slice(1)}`;
+  else if (digits.length === 10) digits = `90${digits}`;
+  return digits;
+}
+
+export function getTelHref(number) {
+  const digits = normalizePhoneDigits(number);
+  return digits ? `tel:+${digits}` : '#';
+}
+
+export function getWhatsAppHref(number) {
+  const digits = normalizePhoneDigits(number);
+  return digits ? `https://wa.me/${digits}` : '#';
 }
 
 function normalizeSocial(raw, baseSocial) {

@@ -18,6 +18,12 @@ export const initialData = {
         { id: "instagram", label: "INSTAGRAM", url: "https://instagram.com", enabled: false }
       ]
     },
+    phones: {
+      enabled: false,
+      items: [
+        { id: "gsm", label: "GSM", number: "+90 532 000 00 00", enabled: true }
+      ]
+    },
     skills: [
       { name: "Arduino / ESP32 Gömülü Yazılım", percentage: 95, color: "var(--cyan)" },
       { name: "Nesnelerin İnterneti (IoT) & MQTT/WebSockets", percentage: 90, color: "var(--purple)" },
@@ -78,6 +84,10 @@ export const initialData = {
         infoTitle: "Bağlantı Noktaları",
         infoText: "Projelerim hakkında iş birliği yapmak, okullarınız için geliştirmeler talep etmek ya da teknoloji mentörlüğü almak isterseniz benimle doğrudan iletişime geçebilirsiniz.",
         emailLabel: "E-POSTA",
+        phoneLabel: "TELEFON",
+        btnCall: "ARA",
+        btnWhatsapp: "WHATSAPP",
+        phoneHint: "Aramak veya WhatsApp ile yazmak için butonlara tıklayın.",
         socialTitle: "Sosyal Ağlar",
         formTitle: "İletişim Formu",
         labelName: "İsim / Kurum Adı",

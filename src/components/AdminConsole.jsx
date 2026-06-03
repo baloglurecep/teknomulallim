@@ -573,6 +573,9 @@ export default function AdminConsole({ profile, projects, onSaveProfile, onSaveP
                     onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
                     style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px', borderRadius: '6px', color: '#fff', outline: 'none' }}
                   />
+                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                    Telefon numaraları: <strong style={{ color: 'var(--cyan)' }}>Site Metinleri</strong> sekmesindeki <strong>TELEFON</strong> bölümünden eklenir (onay kutusu ile açılır).
+                  </span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
